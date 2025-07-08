@@ -2,16 +2,20 @@ import streamlit as st
 import pandas as pd
 import os
 
-# File location
-DATA_FILE = "data/trails.csv"
+# --- Ensure /data folder exists ---
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
+DATA_FILE = os.path.join(DATA_DIR, "trails.csv")
 
-# Ensure data file exists
+# Create empty CSV if it doesn't exist
 if not os.path.exists(DATA_FILE):
     df = pd.DataFrame(columns=["Question", "Tag", "Status"])
     df.to_csv(DATA_FILE, index=False)
 
 # Load data
 df = pd.read_csv(DATA_FILE)
+
+st.set_page_config(page_title="Curiosity Trails", page_icon="🌱")
 
 st.title("🌱 Curiosity Trails")
 st.write("Capture your questions, organise them by theme, and grow your curiosity forest!")
@@ -28,6 +32,7 @@ with st.form("add_form"):
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         df.to_csv(DATA_FILE, index=False)
         st.success("Trail added!")
+        st.experimental_rerun()
 
 # --- View & filter ---
 st.header("🌿 Your Trails")
@@ -45,14 +50,14 @@ if not filtered_df.empty:
         cols[0].markdown(f"**{row['Question']}**")
         cols[1].markdown(f"`{row['Tag']}`")
         if row["Status"] == "Active":
-            if cols[2].button("Mark Done", key=idx):
+            if cols[2].button("✅ Mark Done", key=idx):
                 df.at[idx, "Status"] = "Done"
                 df.to_csv(DATA_FILE, index=False)
                 st.experimental_rerun()
         else:
-            cols[2].markdown("✅ Done")
+            cols[2].markdown("✔️ Done")
 else:
-    st.write("No trails yet. Start adding some!")
+    st.info("No trails yet. Start adding some!")
 
 # Show raw data toggle
 with st.expander("📊 See Raw Data"):
